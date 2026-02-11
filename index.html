@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Mini Cabezas - Ultimate Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Rajdhani:wght@600;700&display=swap');
+        
+        body {
+            background-color: #020617;
+            color: white;
+            font-family: 'Rajdhani', sans-serif;
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            user-select: none;
+        }
+
+        #game-wrapper {
+            position: relative;
+            box-shadow: 0 0 80px rgba(37, 99, 235, 0.4);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 8px solid #334155;
+            background: #000;
+        }
+
+        canvas { display: block; background: #14532d; }
+
+        .title-font { font-family: 'Black Ops One', cursive; }
+
+        .ui-layer {
+            position: absolute;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+        }
+
+        .hidden { display: none !important; }
+
+        .btn-main {
+            background: linear-gradient(180deg, #eab308 0%, #ca8a04 100%);
+            color: #422006;
+            padding: 1rem 2.5rem;
+            border-radius: 12px;
+            font-family: 'Black Ops One', cursive;
+            font-size: 1.4rem;
+            border: 4px solid #713f12;
+            margin: 10px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #713f12;
+            transition: all 0.1s;
+        }
+
+        .btn-main:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #713f12;
+        }
+
+        .crest-option {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            background: #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .crest-option.selected {
+            border-color: #eab308;
+            background: #422006;
+            transform: scale(1.1);
+        }
+
+        .input-group {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-wrapper">
+        
+        <!-- MENU PRINCIPAL -->
+        <div id="screen-menu" class="ui-layer">
+            <h1 class="text-7xl title-font text-yellow-500 mb-2 drop-shadow-lg">STADIUM KINGS</h1>
+            <p class="text-blue-300 mb-10 tracking-[0.4em] font-bold text-xl">PRO SOCCER 2024</p>
+            
+            <button onclick="setupVersus()" class="btn-main">⚽ MODO 2 JUGADORES</button>
+            <button onclick="showControls()" class="btn-main" style="background: #334155; color: white; border-color: #1e293b; box-shadow: 0 6px 0 #1e293b;">¿CÓMO JUGAR?</button>
+        </div>
+
+        <!-- SETUP VERSUS -->
+        <div id="screen-setup-vs" class="ui-layer hidden">
+            <h2 class="text-5xl title-font mb-8 text-blue-400">CONFIGURAR PARTIDO</h2>
+            
+            <div class="flex gap-10 items-start mb-10">
+                <div class="input-group border-blue-500/50">
+                    <h3 class="text-blue-400 font-bold mb-4 text-xl">LOCAL (P1)</h3>
+                    <input type="text" id="vs-p1-name" value="LEYENDA 1" class="bg-black/60 p-3 rounded-lg w-full mb-4 outline-none border border-blue-900 focus:border-blue-400 text-center">
+                    <div class="grid grid-cols-5 gap-2" id="vs-p1-crests"></div>
+                </div>
+
+                <div class="input-group border-red-500/50">
+                    <h3 class="text-red-400 font-bold mb-4 text-xl">VISITANTE (P2)</h3>
+                    <input type="text" id="vs-p2-name" value="LEYENDA 2" class="bg-black/60 p-3 rounded-lg w-full mb-4 outline-none border border-red-900 focus:border-red-400 text-center">
+                    <div class="grid grid-cols-5 gap-2" id="vs-p2-crests"></div>
+                </div>
+            </div>
+
+            <div class="flex gap-4">
+                <button onclick="startVersus()" class="btn-main">¡PITAZO INICIAL!</button>
+                <button onclick="goToMenu()" class="btn-main" style="background: #475569; color: white; border-color: #1e293b; box-shadow: 0 6px 0 #1e293b;">VOLVER</button>
+            </div>
+        </div>
+
+        <!-- CONTROLES -->
+        <div id="screen-controls" class="ui-layer hidden">
+            <h2 class="text-5xl title-font mb-10">CONTROLES</h2>
+            <div class="grid grid-cols-2 gap-12 bg-white/5 p-12 rounded-3xl border border-white/10">
+                <div class="text-center">
+                    <div class="text-blue-400 font-bold text-3xl mb-6 underline">JUGADOR 1</div>
+                    <div class="space-y-2 text-xl">
+                        <p><span class="text-yellow-500 font-bold">W-A-D</span> : MOVERSE</p>
+                        <p><span class="text-yellow-500 font-bold">G</span> : PATEAR LENTO</p>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <div class="text-red-400 font-bold text-3xl mb-6 underline">JUGADOR 2</div>
+                    <div class="space-y-2 text-xl">
+                        <p><span class="text-yellow-500 font-bold">FLECHAS</span> : MOVERSE</p>
+                        <p><span class="text-yellow-500 font-bold">ESPACIO / M</span> : PATEAR LENTO</p>
+                    </div>
+                </div>
+            </div>
+            <button onclick="goToMenu()" class="btn-main mt-10">ENTENDIDO</button>
+        </div>
+
+        <!-- RESULTADOS -->
+        <div id="screen-result" class="ui-layer hidden">
+            <h2 id="res-title" class="text-6xl title-font mb-4 text-yellow-500">¡FIN DEL PARTIDO!</h2>
+            <div id="res-score" class="text-9xl font-black mb-12 tracking-tighter">0 - 0</div>
+            <button onclick="goToMenu()" class="btn-main">REGRESAR AL CLUB</button>
+        </div>
+
+        <canvas id="gameCanvas" width="1000" height="600"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const CRESTS = ["🦁", "🦅", "⚡", "⭐", "🐉", "⚔️", "👑", "🔥", "🦈", "🦍"];
+        
+        const PHYS = {
+            g: 0.35,           // Gravedad
+            ground: 540,      // Nivel del suelo
+            frictionX: 0.94,   // Fricción jugadores
+            ballFriction: 0.975,// Fricción del balón aumentada para que se pare solo
+            pRadius: 42,
+            bRadius: 16,
+            pSpeed: 0.45,
+            pJump: -10.5,
+            maxVel: 5.5,
+            goalWidth: 70,    // Ancho del arco
+            goalHeight: 160   // Alto del arco
+        };
+
+        let state = {
+            screen: 'MENU',
+            timer: 60,
+            lastTime: 0,
+            p1: null,
+            p2: null,
+            ball: null
+        };
+
+        let keys = {};
+
+        class Player {
+            constructor(x, config, controls, side) {
+                this.x = x;
+                this.y = PHYS.ground - PHYS.pRadius;
+                this.vx = 0; this.vy = 0;
+                this.color = side === 'left' ? '#2563eb' : '#dc2626';
+                this.name = config.name;
+                this.crest = config.crest;
+                this.controls = controls;
+                this.side = side;
+                this.score = 0;
+                this.canJump = true;
+                this.kickAnim = 0;
+            }
+
+            update() {
+                if (keys[this.controls.left]) this.vx -= PHYS.pSpeed;
+                if (keys[this.controls.right]) this.vx += PHYS.pSpeed;
+                if (keys[this.controls.up] && this.canJump) {
+                    this.vy = PHYS.pJump;
+                    this.canJump = false;
+                }
+
+                if (keys[this.controls.kick] && this.kickAnim <= 0) {
+                    this.kickAnim = 1;
+                    this.checkKick();
+                }
+
+                this.vy += PHYS.g;
+                this.vx *= PHYS.frictionX;
+                
+                if(Math.abs(this.vx) > PHYS.maxVel) this.vx = Math.sign(this.vx) * PHYS.maxVel;
+
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Suelo
+                if (this.y + PHYS.pRadius > PHYS.ground) {
+                    this.y = PHYS.ground - PHYS.pRadius;
+                    this.vy = 0;
+                    this.canJump = true;
+                }
+                
+                // Límites laterales externos (paredes del estadio)
+                if (this.x < PHYS.pRadius) this.x = PHYS.pRadius;
+                if (this.x > canvas.width - PHYS.pRadius) this.x = canvas.width - PHYS.pRadius;
+
+                if (this.kickAnim > 0) this.kickAnim -= 0.12;
+            }
+
+            checkKick() {
+                const dist = Math.hypot(this.x - state.ball.x, this.y - state.ball.y);
+                if (dist < PHYS.pRadius + PHYS.bRadius + 20) {
+                    const angle = Math.atan2(state.ball.y - this.y, state.ball.x - this.x);
+                    // PATADA LENTA: Reducida de 11 a 7.5 de fuerza
+                    const force = 7.5; 
+                    state.ball.vx = Math.cos(angle) * force + (this.vx * 0.3);
+                    state.ball.vy = Math.sin(angle) * force - 3; // Menos elevación agresiva
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                
+                // Sombra
+                ctx.beginPath();
+                ctx.ellipse(0, PHYS.pRadius, 30, 10, 0, 0, Math.PI*2);
+                ctx.fillStyle = "rgba(0,0,0,0.2)";
+                ctx.fill();
+
+                // Cabeza
+                ctx.beginPath();
+                ctx.arc(0, 0, PHYS.pRadius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.strokeStyle = "rgba(255,255,255,0.3)";
+                ctx.lineWidth = 4;
+                ctx.stroke();
+
+                const dir = this.side === 'left' ? 1 : -1;
+                // Ojos
+                ctx.fillStyle = "white";
+                ctx.beginPath(); ctx.arc(18 * dir, -12, 12, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = "black";
+                ctx.beginPath(); ctx.arc(22 * dir, -12, 5, 0, Math.PI*2); ctx.fill();
+
+                // Escudo
+                ctx.font = "32px Arial";
+                ctx.textAlign = "center";
+                ctx.fillText(this.crest, -12 * dir, 12);
+
+                // Botín
+                ctx.rotate(this.kickAnim * dir * 1.3);
+                ctx.fillStyle = "#1e293b";
+                ctx.fillRect(10 * dir, 28, 38 * dir, 18);
+                ctx.restore();
+
+                ctx.font = "bold 18px Rajdhani";
+                ctx.fillStyle = "white";
+                ctx.textAlign = "center";
+                ctx.fillText(this.name.toUpperCase(), this.x, this.y - 65);
+            }
+        }
+
+        class Ball {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = canvas.width / 2;
+                this.y = 100;
+                this.vx = 0; this.vy = 0;
+                this.angle = 0;
+            }
+            update() {
+                this.vy += PHYS.g;
+                this.vx *= PHYS.ballFriction; 
+                
+                this.x += this.vx;
+                this.y += this.vy;
+                this.angle += this.vx * 0.15;
+
+                // Suelo
+                if (this.y + PHYS.bRadius > PHYS.ground) {
+                    this.y = PHYS.ground - PHYS.bRadius;
+                    this.vy *= -0.6; // Menos rebote para control
+                    if (Math.abs(this.vy) < 0.5) this.vy = 0;
+                    if (Math.abs(this.vx) < 0.1) this.vx = 0;
+                }
+
+                // Paredes laterales (rebote en el fondo del arco)
+                if (this.x < PHYS.bRadius || this.x > canvas.width - PHYS.bRadius) {
+                    this.vx *= -0.5;
+                    this.x = this.x < 500 ? PHYS.bRadius : canvas.width - PHYS.bRadius;
+                }
+
+                // Techo
+                if (this.y < PHYS.bRadius) { this.y = PHYS.bRadius; this.vy *= -0.5; }
+
+                // Postes
+                const goalTop = PHYS.ground - PHYS.goalHeight;
+                // Poste izquierdo (frontal)
+                if (Math.abs(this.x - PHYS.goalWidth) < PHYS.bRadius && this.y < goalTop + 10 && this.y > goalTop - 10) {
+                    this.vy *= -0.8; this.vx *= -0.8;
+                }
+                // Poste derecho (frontal)
+                if (Math.abs(this.x - (canvas.width - PHYS.goalWidth)) < PHYS.bRadius && this.y < goalTop + 10 && this.y > goalTop - 10) {
+                    this.vy *= -0.8; this.vx *= -0.8;
+                }
+
+                // Goles
+                if (this.y > goalTop) {
+                    if (this.x < PHYS.goalWidth - 5) score(2);
+                    if (this.x > canvas.width - PHYS.goalWidth + 5) score(1);
+                }
+            }
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+                ctx.beginPath();
+                ctx.arc(0, 0, PHYS.bRadius, 0, Math.PI * 2);
+                ctx.fillStyle = "white";
+                ctx.fill();
+                ctx.strokeStyle = "black";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                // Dibujo balón
+                ctx.fillStyle = "#333";
+                for(let i=0; i<5; i++){
+                    const a = (i * Math.PI * 2) / 5;
+                    ctx.beginPath(); ctx.arc(Math.cos(a)*10, Math.sin(a)*10, 5, 0, Math.PI*2); ctx.fill();
+                }
+                ctx.restore();
+            }
+        }
+
+        function score(pId) {
+            if (pId === 1) state.p1.score++; else state.p2.score++;
+            state.ball.reset();
+            state.p1.x = 200; state.p1.vx = 0;
+            state.p2.x = 800; state.p2.vx = 0;
+        }
+
+        function loop() {
+            if (state.screen !== 'PLAYING') return;
+            requestAnimationFrame(loop);
+
+            state.p1.update();
+            state.p2.update();
+            state.ball.update();
+            
+            checkCollision(state.p1, state.ball);
+            checkCollision(state.p2, state.ball);
+
+            const now = Date.now();
+            if (now - state.lastTime > 1000) {
+                state.timer--;
+                state.lastTime = now;
+                if (state.timer <= 0) endGame();
+            }
+
+            drawCancha();
+            state.p1.draw();
+            state.p2.draw();
+            state.ball.draw();
+            drawHUD();
+        }
+
+        function checkCollision(p, b) {
+            const dx = b.x - p.x;
+            const dy = b.y - p.y;
+            const dist = Math.hypot(dx, dy);
+            if (dist < PHYS.pRadius + PHYS.bRadius) {
+                const angle = Math.atan2(dy, dx);
+                const speed = Math.hypot(b.vx, b.vy) * 0.8 + 1.5;
+                b.vx = Math.cos(angle) * speed + p.vx;
+                b.vy = Math.sin(angle) * speed;
+            }
+        }
+
+        function drawCancha() {
+            // Cielo
+            ctx.fillStyle = "#1e293b";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Césped
+            for(let i=0; i<10; i++) {
+                ctx.fillStyle = i % 2 === 0 ? "#14532d" : "#166534";
+                ctx.fillRect(i * 100, PHYS.ground, 100, canvas.height - PHYS.ground);
+            }
+
+            // Marcas de cal
+            ctx.strokeStyle = "rgba(255,255,255,0.4)";
+            ctx.lineWidth = 4;
+            // Centro
+            ctx.beginPath(); ctx.moveTo(canvas.width/2, PHYS.ground); ctx.lineTo(canvas.width/2, canvas.height); ctx.stroke();
+            ctx.beginPath(); ctx.arc(canvas.width/2, PHYS.ground + 40, 70, 0, Math.PI*2); ctx.stroke();
+            
+            // Arcos (Organizados: Uno a cada lado)
+            drawGoal(0, PHYS.ground - PHYS.goalHeight, PHYS.goalWidth, PHYS.goalHeight, false);
+            drawGoal(canvas.width - PHYS.goalWidth, PHYS.ground - PHYS.goalHeight, PHYS.goalWidth, PHYS.goalHeight, true);
+        }
+
+        function drawGoal(x, y, w, h, flipped) {
+            ctx.save();
+            // Red
+            ctx.strokeStyle = "rgba(255,255,255,0.2)";
+            ctx.lineWidth = 2;
+            ctx.setLineDash([4, 4]);
+            for(let i=15; i<h; i+=20) { ctx.beginPath(); ctx.moveTo(x, y+i); ctx.lineTo(x+w, y+i); ctx.stroke(); }
+            for(let i=15; i<w; i+=20) { ctx.beginPath(); ctx.moveTo(x+i, y); ctx.lineTo(x+i, y+h); ctx.stroke(); }
+            ctx.setLineDash([]);
+
+            // Postes principales
+            ctx.strokeStyle = "#f8fafc";
+            ctx.lineWidth = 8;
+            ctx.lineCap = "round";
+            ctx.beginPath();
+            if(!flipped) {
+                ctx.moveTo(0, y+h); ctx.lineTo(w, y+h); // Base
+                ctx.lineTo(w, y); // Poste frontal
+                ctx.lineTo(0, y); // Larguero
+            } else {
+                ctx.moveTo(canvas.width, y+h); ctx.lineTo(canvas.width-w, y+h); // Base
+                ctx.lineTo(canvas.width-w, y); // Poste frontal
+                ctx.lineTo(canvas.width, y); // Larguero
+            }
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function drawHUD() {
+            ctx.fillStyle = "white";
+            ctx.font = "bold 55px Rajdhani";
+            ctx.textAlign = "center";
+            ctx.fillText(`${state.p1.score} - ${state.p2.score}`, canvas.width/2, 65);
+            ctx.font = "22px Rajdhani";
+            ctx.fillText(`TIEMPO: ${state.timer}s`, canvas.width/2, 100);
+        }
+
+        function goToMenu() {
+            state.screen = 'MENU';
+            document.querySelectorAll('.ui-layer').forEach(l => l.classList.add('hidden'));
+            document.getElementById('screen-menu').classList.remove('hidden');
+        }
+
+        function showControls() {
+            document.getElementById('screen-menu').classList.add('hidden');
+            document.getElementById('screen-controls').classList.remove('hidden');
+        }
+
+        function setupVersus() {
+            document.getElementById('screen-menu').classList.add('hidden');
+            document.getElementById('screen-setup-vs').classList.remove('hidden');
+            renderCrestSelectors();
+        }
+
+        function renderCrestSelectors() {
+            ['vs-p1-crests', 'vs-p2-crests'].forEach(id => {
+                const container = document.getElementById(id);
+                container.innerHTML = '';
+                CRESTS.forEach((c, i) => {
+                    const opt = document.createElement('div');
+                    opt.className = 'crest-option' + (i === (id.includes('p1') ? 0 : 4) ? ' selected' : '');
+                    opt.innerText = c;
+                    opt.onclick = () => {
+                        container.querySelectorAll('.crest-option').forEach(o => o.classList.remove('selected'));
+                        opt.classList.add('selected');
+                    };
+                    container.appendChild(opt);
+                });
+            });
+        }
+
+        function startVersus() {
+            const p1C = document.querySelector('#vs-p1-crests .selected').innerText;
+            const p2C = document.querySelector('#vs-p2-crests .selected').innerText;
+            state.p1 = new Player(250, {name: document.getElementById('vs-p1-name').value, crest: p1C}, {up:'KeyW', left:'KeyA', right:'KeyD', kick:'KeyG'}, 'left');
+            state.p2 = new Player(750, {name: document.getElementById('vs-p2-name').value, crest: p2C}, {up:'ArrowUp', left:'ArrowLeft', right:'ArrowRight', kick:'Space'}, 'right');
+            state.ball = new Ball();
+            state.timer = 60;
+            state.screen = 'PLAYING';
+            state.lastTime = Date.now();
+            document.querySelectorAll('.ui-layer').forEach(l => l.classList.add('hidden'));
+            loop();
+        }
+
+        function endGame() {
+            state.screen = 'RESULT';
+            document.getElementById('screen-result').classList.remove('hidden');
+            document.getElementById('res-score').innerText = `${state.p1.score} - ${state.p2.score}`;
+        }
+
+        window.addEventListener('keydown', e => { keys[e.code] = true; if(['Space','ArrowUp','ArrowDown'].includes(e.code)) e.preventDefault(); });
+        window.addEventListener('keyup', e => keys[e.code] = false);
+
+        goToMenu();
+    </script>
+</body>
+</html>
